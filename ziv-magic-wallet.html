@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ziv 嘅魔法小金庫 🎂</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #f9c74f;
+    --gold-dark: #e6a800;
+    --bg: #fff8ee;
+    --card-bg: #ffffff;
+    --text: #3a2a10;
+    --text-sub: #8a7060;
+    --shadow: 0 4px 24px rgba(180,120,20,0.13);
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Noto Sans HK', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(249,199,79,0.18) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(248,150,30,0.12) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23f9c74f' opacity='0.2'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 0 0 2rem;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+  }
+  .header-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #f9c74f, #f8961e);
+    color: #fff;
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .header p {
+    font-size: 13px;
+    color: var(--text-sub);
+  }
+
+  /* Counter card */
+  .counter-card {
+    margin: 0.75rem 1rem;
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(249,199,79,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .counter-main { line-height: 1; }
+  .counter-main .label { font-size: 11px; color: var(--text-sub); margin-bottom: 2px; }
+  .counter-main .num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 48px;
+    color: var(--text);
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+  .counter-main .num.pop { animation: numPop 0.35s ease; }
+  .counter-main .sub { font-size: 12px; color: var(--text-sub); }
+  .counter-right { text-align: right; }
+  .counter-right .label { font-size: 11px; color: var(--text-sub); margin-bottom: 2px; }
+  .counter-right .used-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    color: #ccc;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    margin: 0 1rem 0.75rem;
+    height: 8px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #f9c74f, #f8961e);
+    border-radius: 8px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* Hint */
+  .hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-sub);
+    padding: 0 1rem 0.5rem;
+    min-height: 22px;
+    transition: opacity 0.3s;
+  }
+
+  /* Grid */
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    padding: 0 0.75rem;
+    position: relative;
+    min-height: 100px;
+  }
+
+  /* Ticket */
+  .ticket {
+    cursor: pointer;
+    border-radius: 16px;
+    position: relative;
+    overflow: visible;
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    width: 175px;
+    height: 100px;
+    flex-shrink: 0;
+  }
+  .ticket:hover { transform: translateY(-3px) scale(1.02); }
+  .ticket:active { transform: scale(0.94); }
+  .ticket.fly {
+    animation: flyAway 0.55s cubic-bezier(0.4,0,1,1) forwards;
+    pointer-events: none;
+  }
+  .ticket svg { display: block; border-radius: 16px; overflow: hidden; }
+
+  /* Empty state */
+  .empty {
+    display: none;
+    text-align: center;
+    padding: 2rem 1rem;
+    animation: fadeUp 0.5s ease;
+  }
+  .empty .emoji { font-size: 48px; margin-bottom: 10px; }
+  .empty h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .empty p { font-size: 13px; color: var(--text-sub); }
+
+  /* Pikachu decoration top */
+  .deco {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 0.5rem 1rem 0;
+    font-size: 20px;
+    opacity: 0.6;
+  }
+
+  /* Reset */
+  .reset-wrap {
+    text-align: center;
+    padding: 1rem 1rem 0;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    margin-top: 1rem;
+  }
+  .reset-btn {
+    font-size: 11px;
+    color: #bbb;
+    background: none;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 5px 14px;
+    cursor: pointer;
+    font-family: 'Noto Sans HK', sans-serif;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .reset-btn:hover { color: #888; border-color: #bbb; }
+
+  /* Stars spark */
+  .spark {
+    position: fixed;
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 999;
+    animation: sparkFly 0.7s ease-out forwards;
+  }
+
+  /* Keyframes */
+  @keyframes flyAway {
+    0%   { transform: scale(1) rotate(0deg) translateY(0); opacity: 1; }
+    25%  { transform: scale(1.08) rotate(-4deg) translateY(-8px); opacity: 1; }
+    100% { transform: scale(0.05) rotate(30deg) translateY(-120px) translateX(30px); opacity: 0; }
+  }
+  @keyframes numPop {
+    0%,100% { transform: scale(1); }
+    40%     { transform: scale(1.22); }
+  }
+  @keyframes sparkFly {
+    0%   { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; }
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(16px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  @keyframes ticketIn {
+    from { opacity:0; transform: scale(0.85) translateY(10px); }
+    to   { opacity:1; transform: scale(1) translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="deco">⚡ ⚡ ⚡ ⚡ ⚡</div>
+
+  <div class="header">
+    <div class="header-badge">4th Birthday Limited Edition</div>
+    <h1>💰 Ziv 嘅魔法小金庫</h1>
+    <p>Happy 4th Birthday！祝你快高長大、電力十足！</p>
+  </div>
+
+  <div class="counter-card">
+    <div class="counter-main">
+      <div class="label">剩餘魔法券</div>
+      <div class="num" id="count-num">10</div>
+      <div class="sub">/ 10 張</div>
+    </div>
+    <div class="counter-right">
+      <div class="label">已用</div>
+      <div class="used-num" id="used-num">0</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="prog" style="width:100%;"></div>
+  </div>
+
+  <div class="hint" id="hint">👆 Tap 一張券就可以用咗佢！</div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="empty" id="empty">
+    <div class="emoji">🎉</div>
+    <h2>10 張全部用完喇！</h2>
+    <p>開心買，開心玩！⚡<br>契爸謙好愛你！</p>
+  </div>
+
+  <div class="reset-wrap">
+    <button class="reset-btn" onclick="resetAll()">↺ 重置（契爺專用）</button>
+  </div>
+
+</div>
+
+<script>
+const TICKETS = [
+  { num:'01', bg:'#fffbea', border:'#e6ac00', titleC:'#8a6400', amtC:'#b87d00', icon:'🎂', label:'生日快樂' },
+  { num:'02', bg:'#f3eeff', border:'#9b7de8', titleC:'#5a3fa8', amtC:'#7a5cc8', icon:'⭐', label:'健康成長' },
+  { num:'03', bg:'#fff0f5', border:'#f48fb1', titleC:'#c2185b', amtC:'#e91e63', icon:'🌸', label:'開心快樂' },
+  { num:'04', bg:'#fff4e6', border:'#ffa040', titleC:'#b35c00', amtC:'#e07000', icon:'👑', label:'小小王子' },
+  { num:'05', bg:'#efffef', border:'#5abf5a', titleC:'#2d6e2d', amtC:'#388e3c', icon:'⚽', label:'勁力無限' },
+  { num:'06', bg:'#eafbfb', border:'#3abfbf', titleC:'#007a7a', amtC:'#009999', icon:'🏆', label:'勝利之星' },
+  { num:'07', bg:'#eaf4ff', border:'#5599e8', titleC:'#1a4da8', amtC:'#2060c8', icon:'✈️', label:'天空無限' },
+  { num:'08', bg:'#edfaf5', border:'#2db88a', titleC:'#0d6e4e', amtC:'#188a60', icon:'🏁', label:'衝線一刻' },
+  { num:'09', bg:'#fff0ee', border:'#f47060', titleC:'#b52a1a', amtC:'#d93820', icon:'⚡', label:'電力十足' },
+  { num:'10', bg:'#f5f5f5', border:'#999999', titleC:'#444444', amtC:'#555555', icon:'🎁', label:'神秘禮物' },
+];
+
+let used = new Array(10).fill(false);
+
+function makeSVG(t, idx) {
+  const {bg, border:br, titleC:tc, amtC:ac, icon, label, num} = t;
+  return `<svg width="175" height="100" viewBox="0 0 175 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="dp${idx}" patternUnits="userSpaceOnUse" width="14" height="14">
+      <circle cx="7" cy="7" r="1.3" fill="${br}" opacity="0.15"/>
+    </pattern>
+    <clipPath id="cp${idx}"><rect width="175" height="100" rx="16"/></clipPath>
+  </defs>
+  <rect width="175" height="100" rx="16" fill="${bg}"/>
+  <rect width="175" height="100" fill="url(#dp${idx})" clip-path="url(#cp${idx})"/>
+  <rect x="1.5" y="1.5" width="172" height="97" rx="14.5" fill="none" stroke="${br}" stroke-width="1.8"/>
+  <rect x="6" y="6" width="163" height="88" rx="10" fill="none" stroke="${br}" stroke-width="0.6" opacity="0.45"/>
+  <circle cx="0" cy="50" r="8" fill="#fff8ee"/>
+  <circle cx="175" cy="50" r="8" fill="#fff8ee"/>
+  <line x1="16" y1="50" x2="159" y2="50" stroke="${br}" stroke-width="0.8" stroke-dasharray="4,3.5" opacity="0.45"/>
+
+  <!-- Label row -->
+  <text x="15" y="26" font-family="'Noto Sans HK',sans-serif" font-size="18" fill="${tc}">${icon}</text>
+  <text x="38" y="26" font-family="'Noto Sans HK',sans-serif" font-size="10" font-weight="700" fill="${tc}" letter-spacing="0.8">${label}</text>
+  <text x="161" y="26" font-family="'Noto Sans HK',sans-serif" font-size="9" fill="${tc}" text-anchor="end" opacity="0.65">No.${num}</text>
+
+  <!-- Pochacco -->
+  <ellipse cx="24" cy="68" rx="11" ry="12" fill="white" stroke="${br}" stroke-width="0.9"/>
+  <ellipse cx="19.5" cy="57.5" rx="5" ry="6.5" fill="white" stroke="${br}" stroke-width="0.8"/>
+  <ellipse cx="28.5" cy="57.5" rx="5" ry="6.5" fill="white" stroke="${br}" stroke-width="0.8"/>
+  <circle cx="21" cy="65.5" r="1.7" fill="#2a2a2a"/>
+  <circle cx="27" cy="65.5" r="1.7" fill="#2a2a2a"/>
+  <ellipse cx="24" cy="70" rx="2.8" ry="1.3" fill="#ffb3c1"/>
+  <path d="M21 72 Q24 75 27 72" stroke="#2a2a2a" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+
+  <!-- $88 -->
+  <text x="88" y="70" font-family="'Fredoka One',cursive" font-size="26" font-weight="700" fill="${ac}" text-anchor="middle">$88</text>
+
+  <!-- Pikachu -->
+  <ellipse cx="151" cy="69" rx="11" ry="11" fill="#f9c74f" stroke="${br}" stroke-width="0.9"/>
+  <path d="M143 60 L139.5 48.5 L147 57 Z" fill="#f9c74f" stroke="${br}" stroke-width="0.8"/>
+  <path d="M159 60 L162.5 48.5 L155 57 Z" fill="#f9c74f" stroke="${br}" stroke-width="0.8"/>
+  <path d="M143.5 59 L141 50.5 L146 56.5 Z" fill="#2a2a2a" opacity="0.75"/>
+  <path d="M158.5 59 L161 50.5 L156 56.5 Z" fill="#2a2a2a" opacity="0.75"/>
+  <circle cx="147" cy="67" r="1.7" fill="#2a2a2a"/>
+  <circle cx="155" cy="67" r="1.7" fill="#2a2a2a"/>
+  <ellipse cx="143.5" cy="71" rx="4" ry="2.2" fill="#f4a0a0" opacity="0.9"/>
+  <ellipse cx="158.5" cy="71" rx="4" ry="2.2" fill="#f4a0a0" opacity="0.9"/>
+  <path d="M148.5 72 Q151 75.5 153.5 72" stroke="#2a2a2a" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+
+  <!-- From -->
+  <text x="88" y="91" font-family="'Noto Sans HK',sans-serif" font-size="8.5" fill="${tc}" text-anchor="middle" opacity="0.6">From 契爸謙 ♥ 2026.04.24</text>
+</svg>`;
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  let remaining = used.filter(u => !u).length;
+
+  TICKETS.forEach((t, i) => {
+    if (used[i]) return;
+    const div = document.createElement('div');
+    div.className = 'ticket';
+    div.style.animation = `ticketIn 0.3s ease ${(i * 0.05)}s both`;
+    div.innerHTML = makeSVG(t, i);
+    div.addEventListener('click', () => useTicket(i, div));
+    grid.appendChild(div);
+  });
+
+  // Counter
+  const numEl = document.getElementById('count-num');
+  numEl.textContent = remaining;
+  numEl.classList.remove('pop');
+  void numEl.offsetWidth;
+  numEl.classList.add('pop');
+  document.getElementById('used-num').textContent = 10 - remaining;
+  document.getElementById('prog').style.width = (remaining / 10 * 100) + '%';
+
+  const hint = document.getElementById('hint');
+  const empty = document.getElementById('empty');
+  if (remaining === 0) {
+    hint.style.opacity = '0';
+    empty.style.display = 'block';
+  } else {
+    hint.style.opacity = '1';
+    empty.style.display = 'none';
+    hint.textContent = remaining === 1 ? '🎁 最後一張！諗清楚先用！' : '👆 Tap 一張券就可以用咗佢！';
+  }
+}
+
+function useTicket(i, el) {
+  const rect = el.getBoundingClientRect();
+  spawnSparks(rect.left + rect.width/2, rect.top + rect.height/2);
+  el.classList.add('fly');
+  setTimeout(() => { used[i] = true; render(); }, 530);
+}
+
+function spawnSparks(cx, cy) {
+  const emojis = ['⭐','✨','💛','⚡','🌟','🎉'];
+  emojis.forEach((e, j) => {
+    const span = document.createElement('span');
+    span.className = 'spark';
+    span.textContent = e;
+    const angle = (j / emojis.length) * 2 * Math.PI + Math.random() * 0.5;
+    const dist = 55 + Math.random() * 30;
+    span.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    span.style.setProperty('--dy', Math.sin(angle) * dist - 20 + 'px');
+    span.style.left = (cx - 10) + 'px';
+    span.style.top  = (cy - 10) + 'px';
+    span.style.animationDelay = (j * 0.05) + 's';
+    document.body.appendChild(span);
+    setTimeout(() => span.remove(), 900);
+  });
+}
+
+function resetAll() {
+  used = new Array(10).fill(false);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
