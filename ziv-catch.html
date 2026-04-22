@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>幫比卡超捉精靈！⚡</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+HK:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#e8f5e9;font-family:'Noto Sans HK',sans-serif;height:100dvh;overflow:hidden;touch-action:none;user-select:none}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 110%,#a5d6a7 0%,#e8f5e9 60%),url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.8' fill='%2381c784' opacity='0.25'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.screen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}
+.screen.hidden{display:none}
+#start-screen{background:rgba(232,245,233,0.97)}
+.start-emoji{font-size:72px;margin-bottom:.5rem;animation:float 2s ease-in-out infinite}
+.start-title{font-family:'Fredoka One',cursive;font-size:30px;color:#1b5e20;margin-bottom:8px}
+.start-sub{font-size:14px;color:#4caf50;margin-bottom:2rem;line-height:1.8}
+.pokemon-preview{display:flex;gap:8px;justify-content:center;font-size:28px;margin-bottom:1.5rem;animation:wiggle 1s ease-in-out infinite alternate}
+.btn-start{font-family:'Fredoka One',cursive;font-size:20px;background:linear-gradient(135deg,#66bb6a,#2e7d32);color:white;border:none;border-radius:50px;padding:14px 44px;cursor:pointer;box-shadow:0 4px 20px rgba(46,125,50,0.35);transition:transform .12s}
+.btn-start:active{transform:scale(.94)}
+#hud{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;background:rgba(255,255,255,0.88);backdrop-filter:blur(6px);border-bottom:1px solid rgba(129,199,132,0.4)}
+#hud.hidden{display:none}
+.hud-left{line-height:1}
+.hud-label{font-size:10px;color:#4caf50;font-weight:700;letter-spacing:.5px}
+.hud-score{font-family:'Fredoka One',cursive;font-size:28px;color:#1b5e20;line-height:1}
+.pokeball-row{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;max-width:200px}
+.pb{font-size:18px;transition:all .3s}
+.pb.caught{filter:grayscale(1);opacity:.3;transform:scale(.75)}
+#game-area{position:fixed;top:62px;bottom:0;left:0;right:0;z-index:5;overflow:hidden}
+#game-area.hidden{display:none}
+#pikachu-base{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:52px;z-index:15;animation:pikaBounce 1.5s ease-in-out infinite;pointer-events:none}
+#pikachu-base.excited{animation:pikaExcited .4s ease}
+.pokemon{position:absolute;font-size:40px;cursor:pointer;z-index:10;transition:transform .08s;-webkit-tap-highlight-color:transparent;line-height:1}
+.pokemon:active{transform:scale(.75)}
+.pokemon.caught-anim{animation:caughtPop .4s ease forwards;pointer-events:none}
+.pokeball-throw{position:absolute;font-size:24px;pointer-events:none;z-index:12;animation:throwBall .35s ease-out forwards}
+.tap-ring{position:absolute;width:50px;height:50px;border-radius:50%;border:3px solid #f9c74f;pointer-events:none;z-index:13;animation:tapRing .4s ease-out forwards;transform:translate(-50%,-50%)}
+#win-screen{background:rgba(232,245,233,0.97)}
+#done-screen{background:rgba(232,245,233,0.97)}
+.win-title{font-family:'Fredoka One',cursive;font-size:28px;color:#1b5e20;margin-bottom:6px}
+.win-sub{font-size:13px;color:#388e3c;margin-bottom:1.25rem}
+.done-title{font-family:'Fredoka One',cursive;font-size:26px;color:#1b5e20;margin-bottom:8px}
+.done-sub{font-size:13px;color:#388e3c;margin-bottom:2rem;line-height:1.7}
+.ticket-wrap{width:290px;margin:0 auto 1.5rem;animation:ticketPop .6s cubic-bezier(.175,.885,.32,1.275) both}
+.ticket-wrap svg{display:block;border-radius:18px;width:100%}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn-green{font-family:'Fredoka One',cursive;font-size:16px;background:linear-gradient(135deg,#66bb6a,#2e7d32);color:white;border:none;border-radius:50px;padding:10px 24px;cursor:pointer;box-shadow:0 3px 12px rgba(46,125,50,0.3);transition:transform .12s}
+.btn-green:active{transform:scale(.95)}
+.btn-outline{font-family:'Fredoka One',cursive;font-size:16px;background:none;border:2px solid #2e7d32;color:#2e7d32;border-radius:50px;padding:10px 24px;cursor:pointer;transition:transform .12s}
+.btn-outline:active{transform:scale(.95)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes wiggle{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+@keyframes pikaBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+@keyframes pikaExcited{0%{transform:translateX(-50%) scale(1) rotate(0deg)}25%{transform:translateX(-50%) scale(1.3) rotate(-10deg)}75%{transform:translateX(-50%) scale(1.3) rotate(10deg)}100%{transform:translateX(-50%) scale(1) rotate(0deg)}}
+@keyframes caughtPop{0%{transform:scale(1);opacity:1}40%{transform:scale(1.5);opacity:.8}100%{transform:scale(0);opacity:0}}
+@keyframes throwBall{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(.5);opacity:0}}
+@keyframes tapRing{0%{transform:translate(-50%,-50%) scale(.5);opacity:1}100%{transform:translate(-50%,-50%) scale(2);opacity:0}}
+@keyframes ticketPop{from{transform:scale(.4) rotate(-12deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes spark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+</style>
+</head>
+<body>
+<div class="screen" id="start-screen">
+  <div class="start-emoji">⚡</div>
+  <div class="start-title">幫比卡超捉精靈！</div>
+  <div class="start-sub">精靈四處亂跑！<br>Tap 中 10 隻就捉到晒 🎯<br>捉齊就解鎖一張禮物券！🎁</div>
+  <div class="pokemon-preview">🐢 🦎 🌊 🔥 🌿 🦋 👻 💎 🧊 🌙</div>
+  <button class="btn-start" onclick="startGame()">出發捉精靈！⚡</button>
+</div>
+<div id="hud" class="hidden">
+  <div class="hud-left"><div class="hud-label">捉到</div><div class="hud-score"><span id="score-num">0</span> / 10</div></div>
+  <div class="pokeball-row" id="pb-row"></div>
+</div>
+<div id="game-area" class="hidden"><div id="pikachu-base">⚡🐾</div></div>
+<div class="screen hidden" id="win-screen">
+  <div style="font-size:52px;margin-bottom:6px;">🎉</div>
+  <div class="win-title">全部捉到喇！</div>
+  <div class="win-sub">比卡超好開心！解鎖咗一張禮物券！</div>
+  <div class="ticket-wrap" id="ticket-wrap"></div>
+  <div class="btn-row">
+    <button class="btn-outline" onclick="goWallet()">睇晒所有券 💰</button>
+    <button class="btn-green" onclick="playAgain()">再玩一次！⚡</button>
+  </div>
+</div>
+<div class="screen hidden" id="done-screen">
+  <div style="font-size:60px;margin-bottom:12px;">🏆</div>
+  <div class="done-title">所有券都解鎖喇！</div>
+  <div class="done-sub">你係最叻嘅精靈訓練師！⚡<br>契爺謙好愛你！</div>
+  <button class="btn-green" onclick="goWallet()">睇晒 10 張券 💰</button>
+</div>
+<script>
+const POKEMON=['🐢','🦎','🌊','🔥','🌿','🦋','👻','💎','🧊','🌙'];
+const TICKETS=[
+  {num:'01',bg:'#fffbea',border:'#e6ac00',titleC:'#8a6400',amtC:'#b87d00',icon:'🎂',label:'生日快樂'},
+  {num:'02',bg:'#f3eeff',border:'#9b7de8',titleC:'#5a3fa8',amtC:'#7a5cc8',icon:'⭐',label:'健康成長'},
+  {num:'03',bg:'#fff0f5',border:'#f48fb1',titleC:'#c2185b',amtC:'#e91e63',icon:'🌸',label:'開心快樂'},
+  {num:'04',bg:'#fff4e6',border:'#ffa040',titleC:'#b35c00',amtC:'#e07000',icon:'👑',label:'小小王子'},
+  {num:'05',bg:'#efffef',border:'#5abf5a',titleC:'#2d6e2d',amtC:'#388e3c',icon:'⚽',label:'勁力無限'},
+  {num:'06',bg:'#eafbfb',border:'#3abfbf',titleC:'#007a7a',amtC:'#009999',icon:'🏆',label:'勝利之星'},
+  {num:'07',bg:'#eaf4ff',border:'#5599e8',titleC:'#1a4da8',amtC:'#2060c8',icon:'✈️',label:'天空無限'},
+  {num:'08',bg:'#edfaf5',border:'#2db88a',titleC:'#0d6e4e',amtC:'#188a60',icon:'🏁',label:'衝線一刻'},
+  {num:'09',bg:'#fff0ee',border:'#f47060',titleC:'#b52a1a',amtC:'#d93820',icon:'⚡',label:'電力十足'},
+  {num:'10',bg:'#f5f5f5',border:'#999999',titleC:'#444444',amtC:'#555555',icon:'🎁',label:'神秘禮物'},
+];
+let score=0,sprites=[],animId=null,gameRunning=false;
+let unlockedCount=parseInt(localStorage.getItem('ziv-unlocked')||'0');
+function startGame(){
+  score=0;sprites=[];document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('hud').classList.remove('hidden');document.getElementById('game-area').classList.remove('hidden');
+  buildPBRow();updateHUD();spawnAll();gameRunning=true;loop();
+}
+function spawnAll(){
+  const area=document.getElementById('game-area'),W=area.clientWidth,H=area.clientHeight;
+  POKEMON.forEach((emoji,i)=>{
+    const el=document.createElement('div');el.className='pokemon';el.textContent=emoji;el.dataset.id=i;
+    const x=40+Math.random()*(W-120),y=40+Math.random()*(H-160);
+    const speed=1.2+Math.random()*1.8,angle=Math.random()*Math.PI*2;
+    const sprite={el,x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,wobble:Math.random()*Math.PI*2,wobbleSpeed:.04+Math.random()*.03,changeDir:80+Math.floor(Math.random()*120),caught:false};
+    sprites.push(sprite);
+    el.addEventListener('click',()=>catchPokemon(sprite));
+    el.addEventListener('touchstart',e=>{e.preventDefault();catchPokemon(sprite);},{passive:false});
+    area.appendChild(el);
+  });
+}
+function loop(){
+  if(!gameRunning)return;
+  const area=document.getElementById('game-area'),W=area.clientWidth,H=area.clientHeight-80;
+  sprites.forEach(s=>{
+    if(s.caught)return;s.wobble+=s.wobbleSpeed;s.changeDir--;
+    if(s.changeDir<=0){const angle=Math.random()*Math.PI*2,speed=1.2+Math.random()*2.2;s.vx=Math.cos(angle)*speed;s.vy=Math.sin(angle)*speed;s.changeDir=60+Math.floor(Math.random()*120);}
+    s.x+=s.vx+Math.sin(s.wobble)*.4;s.y+=s.vy;
+    if(s.x<20){s.x=20;s.vx=Math.abs(s.vx)}if(s.x>W-60){s.x=W-60;s.vx=-Math.abs(s.vx)}
+    if(s.y<20){s.y=20;s.vy=Math.abs(s.vy)}if(s.y>H-20){s.y=H-20;s.vy=-Math.abs(s.vy)}
+    s.el.style.left=s.x+'px';s.el.style.top=s.y+'px';
+  });
+  animId=requestAnimationFrame(loop);
+}
+function catchPokemon(sprite){
+  if(sprite.caught||!gameRunning)return;sprite.caught=true;score++;
+  sprite.el.classList.add('caught-anim');
+  const ring=document.createElement('div');ring.className='tap-ring';ring.style.left=(sprite.x+20)+'px';ring.style.top=(sprite.y+20)+'px';
+  document.getElementById('game-area').appendChild(ring);setTimeout(()=>ring.remove(),500);
+  throwBall(sprite.x+20,sprite.y+20);pikaExcited();
+  setTimeout(()=>sprite.el.remove(),420);updateHUD();
+  if(score>=10){gameRunning=false;cancelAnimationFrame(animId);setTimeout(showWin,600);}
+}
+function throwBall(tx,ty){
+  const area=document.getElementById('game-area'),W=area.clientWidth,H=area.clientHeight;
+  const sx=W/2,sy=H-60,ball=document.createElement('div');ball.className='pokeball-throw';ball.textContent='🔴';
+  ball.style.left=sx+'px';ball.style.top=sy+'px';ball.style.setProperty('--tx',(tx-sx)+'px');ball.style.setProperty('--ty',(ty-sy)+'px');
+  area.appendChild(ball);setTimeout(()=>ball.remove(),400);
+}
+function pikaExcited(){const p=document.getElementById('pikachu-base');p.classList.remove('excited');void p.offsetWidth;p.classList.add('excited');}
+function buildPBRow(){const row=document.getElementById('pb-row');row.innerHTML='';for(let i=0;i<10;i++){const s=document.createElement('span');s.className='pb';s.id='pb-'+i;s.textContent='🔴';row.appendChild(s);}}
+function updateHUD(){document.getElementById('score-num').textContent=score;const pbs=document.querySelectorAll('.pb');pbs.forEach((p,i)=>{p.classList.toggle('caught',i<score);});}
+function showWin(){
+  unlockedCount++;if(unlockedCount>10)unlockedCount=10;localStorage.setItem('ziv-unlocked',unlockedCount);
+  document.getElementById('hud').classList.add('hidden');document.getElementById('game-area').classList.add('hidden');
+  if(unlockedCount>10){document.getElementById('done-screen').classList.remove('hidden');return;}
+  const t=TICKETS[unlockedCount-1];document.getElementById('ticket-wrap').innerHTML=makeSVG(t,unlockedCount);document.getElementById('win-screen').classList.remove('hidden');
+  for(let i=0;i<4;i++)setTimeout(()=>spawnSparks(window.innerWidth/2,window.innerHeight/2),i*150);
+}
+function spawnSparks(cx,cy){
+  ['⭐','✨','🔴','⚡','🌟','🎉','💚'].forEach((e,j)=>{const s=document.createElement('span');const angle=(j/7)*2*Math.PI+Math.random()*.4,dist=60+Math.random()*40;s.style.cssText=`position:fixed;font-size:20px;pointer-events:none;z-index:999;left:${cx-10}px;top:${cy-10}px;animation:spark .7s ease-out ${j*.06}s forwards;`;s.style.setProperty('--dx',Math.cos(angle)*dist+'px');s.style.setProperty('--dy',Math.sin(angle)*dist-30+'px');s.textContent=e;document.body.appendChild(s);setTimeout(()=>s.remove(),900);});
+}
+function makeSVG(t,idx){
+  const{bg,border:br,titleC:tc,amtC:ac,icon,label,num}=t;
+  return`<svg viewBox="0 0 290 165" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="dp${idx}" patternUnits="userSpaceOnUse" width="14" height="14"><circle cx="7" cy="7" r="1.3" fill="${br}" opacity="0.15"/></pattern><clipPath id="cp${idx}"><rect width="290" height="165" rx="20"/></clipPath></defs><rect width="290" height="165" rx="20" fill="${bg}"/><rect width="290" height="165" fill="url(#dp${idx})" clip-path="url(#cp${idx})"/><rect x="2" y="2" width="286" height="161" rx="18" fill="none" stroke="${br}" stroke-width="2.5"/><rect x="7" y="7" width="276" height="151" rx="14" fill="none" stroke="${br}" stroke-width=".7" opacity=".4"/><circle cx="0" cy="82" r="13" fill="#e8f5e9"/><circle cx="290" cy="82" r="13" fill="#e8f5e9"/><line x1="20" y1="82" x2="270" y2="82" stroke="${br}" stroke-width="1" stroke-dasharray="5,4" opacity=".4"/><text x="22" y="46" font-family="serif" font-size="28">${icon}</text><text x="58" y="46" font-family="'Noto Sans HK',sans-serif" font-size="16" font-weight="700" fill="${tc}" letter-spacing="1">${label}</text><text x="268" y="46" font-family="'Noto Sans HK',sans-serif" font-size="12" fill="${tc}" text-anchor="end" opacity=".6">No.${num}</text><ellipse cx="40" cy="114" rx="17" ry="19" fill="white" stroke="${br}" stroke-width="1"/><ellipse cx="31" cy="96" rx="7.5" ry="10.5" fill="white" stroke="${br}" stroke-width=".9"/><ellipse cx="49" cy="96" rx="7.5" ry="10.5" fill="white" stroke="${br}" stroke-width=".9"/><circle cx="34" cy="110" r="2.8" fill="#2a2a2a"/><circle cx="46" cy="110" r="2.8" fill="#2a2a2a"/><ellipse cx="40" cy="117" rx="4.5" ry="2.2" fill="#ffb3c1"/><path d="M35 121 Q40 126 45 121" stroke="#2a2a2a" stroke-width="1.3" fill="none" stroke-linecap="round"/><text x="145" y="120" font-family="'Fredoka One',cursive" font-size="40" fill="${ac}" text-anchor="middle">$88</text><ellipse cx="250" cy="115" rx="19" ry="19" fill="#f9c74f" stroke="${br}" stroke-width="1"/><path d="M234 103 L228 83 L242 98 Z" fill="#f9c74f" stroke="${br}" stroke-width=".9"/><path d="M266 103 L272 83 L258 98 Z" fill="#f9c74f" stroke="${br}" stroke-width=".9"/><path d="M235 102 L230 85 L241 98 Z" fill="#2a2a2a" opacity=".75"/><path d="M265 102 L270 85 L259 98 Z" fill="#2a2a2a" opacity=".75"/><circle cx="244" cy="112" r="2.8" fill="#2a2a2a"/><circle cx="256" cy="112" r="2.8" fill="#2a2a2a"/><ellipse cx="236" cy="118" rx="6.5" ry="3.5" fill="#f4a0a0" opacity=".9"/><ellipse cx="264" cy="118" rx="6.5" ry="3.5" fill="#f4a0a0" opacity=".9"/><path d="M246 122 Q250 127 254 122" stroke="#2a2a2a" stroke-width="1.3" fill="none" stroke-linecap="round"/><text x="145" y="152" font-family="'Noto Sans HK',sans-serif" font-size="11" fill="${tc}" text-anchor="middle" opacity=".6">From 契爺謙 ♥ 2026.04.24</text></svg>`;
+}
+function playAgain(){document.getElementById('win-screen').classList.add('hidden');const area=document.getElementById('game-area');area.innerHTML='<div id="pikachu-base">⚡🐾</div>';startGame();}
+function goWallet(){window.location.href='index.html';}
+</script>
+</body>
+</html>
